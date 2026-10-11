@@ -11,8 +11,10 @@ qt_add_executable(PAYVU_KR
     mainWin.cpp
     mainWin.h
     dataStructures.h
-
+    dataStructures.cpp
 )
+
+target_compile_features(PAYVU_KR PRIVATE cxx_std_20)
 
 qt_add_translations(
     TARGETS PAYVU_KR
