@@ -1,6 +1,7 @@
 #include "dataStructures.h"
 
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <cmath>
 #include <unordered_map>
@@ -54,6 +55,12 @@ void book::setState(state curState) {
 //     return this->curState;
 // }
 
+int book::createBook() {
+    int eCode = 0;
+
+    return eCode;
+}
+
 bool book::operator==(const book& otherBook) const {
     return (this->title == otherBook.title &&
             this->author == otherBook.author &&
@@ -91,10 +98,39 @@ bookList::bookList() {
     thisBook = nullptr;
 }
 
+bookList* bookList::getNextBookList() {
+    return this->nextBookList;
+}
 
+book* bookList::getBook() {
+    return thisBook;
+}
+
+void bookList::addBook(book* newBook) {
+    bookList* sBookList = this;
+    while(sBookList->nextBookList != nullptr) {
+        sBookList = sBookList->nextBookList;
+    }
+    sBookList->nextBookList = new bookList;
+    sBookList->nextBookList->thisBook = newBook;
+    delete sBookList;
+}
+
+int bookList::deleteBook(string delBookID) {
+    bookList* listHead = this;
+    bookList* sBookList = searchBook<string>(delBookID, ID);
+    int code = (sBookList == nullptr) ? -1 : 0;
+    bookList* delBookList = sBookList->nextBookList;
+    sBookList->nextBookList = sBookList->nextBookList->nextBookList;
+    return code;
+}
+
+bookList::~bookList() {
+    delete thisBook;
+    delete nextBookList;
+}
 
 //--------------------------------------------------------------------------------------------------------------
-
 //--------------------------------------------------------------------------------------------------------------
 // Определение таблицы книг
 bookTable::bookTable(int tableSize) {
@@ -114,12 +150,12 @@ int bookTable::hash(string bookID) {
     return res;
 }
 
-void bookTable::addBook(book* newBook, int count) {
-    table[hash(newBook->getValue<string>(ID)) % tableSize]->addBook(newBook, count);
+void bookTable::addBook(book* newBook) {
+    table[hash(newBook->getValue<string>(ID)) % tableSize]->addBook(newBook);
 }
 
-int bookTable::deleteBook(book* remBook, searchParam sParam) {
-    return table[hash(remBook->getValue<string>(ID)) % tableSize]->deleteBook(remBook, sParam);
+int bookTable::deleteBook(string delBookID) {
+    return table[hash(delBookID) % tableSize]->deleteBook(delBookID);
 }
 
 /*
@@ -129,12 +165,95 @@ bookList* searchByAuthor(string bookAuthor);
 */
 
 // Чтение и сохранение из/в файла
-void bookTable::readFromFile(string fileName) {
+void bookTable::readFromFile(const string& fileName) {
+
 
 }
-void bookTable::writeToFile(string fileName) {
+void bookTable::writeToFile(const string& fileName) {
 
 }
+
+// // Функция округления координаты цели
+// string to_string_fixed_precision(double value, int n = 3) {
+//     stringstream ss;
+//     ss << fixed << setprecision(n) << value;
+//     return ss.str();
+// }
+
+// Шаблоны для функции записи и чтения талицы из файла
+
+// // Функция чтения списка целей
+// int readTargetList(string& fileName) {
+//     int eCode = 0;
+//     string buffer = "";
+//     fstream fid;
+//     stringstream ss;
+//     book* newBook = new book;
+//     newBook->createBook();
+//     if(eCode != 0) return eCode;
+
+//     // cout << "Чтение списка целей" << endl << endl;
+
+//     // eCode = chooseFile(fileName, false);
+
+
+//     fid.open(fileName, ios::in);
+//     while(getline(fid, buffer)) {
+//         buffer += ' ';
+//         int firstPosOfSpace = 0;
+//         string targetNameBuf = "";
+//         string coordDataBuf = "";
+//         double coordData = 0;
+//         ss.str("");
+//         ss.clear();
+//         // Чтение строки цели и её координат
+//         firstPosOfSpace = buffer.find_first_not_of(' ');
+//         if(firstPosOfSpace == buffer.npos) continue;
+//         buffer = buffer.substr(firstPosOfSpace);
+//         ss << buffer;
+//         // Добавление цели и её координат в список
+//         getline(ss, targetNameBuf, ' ');
+//         curTarget = addTargetEnd(targetHead, targetNameBuf);
+//         while(getline(ss, coordDataBuf, '|')) {
+//             if(coordDataBuf != "" &&  coordDataBuf != "\n") {
+//                 coordData = stod(coordDataBuf);
+//                 addCoordEnd(curTarget, coordData);
+//             }
+//         }
+//     }
+//     fid.close();
+//     return eCode;
+// }
+// // Функция сохранения списка в файл
+// int saveListToFile(string &fileName, target* targetHead) {
+//     int eCode = 0;
+//     fstream fid;
+//     target* bufTar = targetHead->targetPtr;
+//     coordinate* bufCoord = nullptr;
+
+//     cout << "Сохранение списка целей" << endl << endl;
+
+//     eCode = chooseFile(fileName, true);
+//     if(eCode != 0) return eCode;
+
+//     fid.open(fileName, ios::out);
+
+//     // Перебор и запись целей
+//     while(bufTar != nullptr) {
+//         fid << bufTar->data << ' ';
+//         bufCoord = bufTar->coordPtr;
+//         // Перебор и запись координат цели
+//         while(bufCoord != nullptr) {
+//             fid << bufCoord->coordData << ' ';
+//             bufCoord = bufCoord->coordPtr;
+//         }
+//         fid << endl;
+//         bufTar = bufTar->targetPtr;
+//     }
+//     return eCode;
+// }
+
+
 
 // Вывод информации по запросу пользователя
 // Формат текста UTF-8
@@ -209,6 +328,9 @@ void bookTable::displayLongestBucketLength() {
 
 
 bookTable::~bookTable() {
+    for(int i = 0; i < tableSize; i++) {
+        delete table[i];
+    }
     delete table;
 }
 

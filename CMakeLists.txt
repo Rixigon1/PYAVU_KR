@@ -12,6 +12,7 @@ qt_add_executable(PAYVU_KR
     mainWin.h
     dataStructures.h
     dataStructures.cpp
+    fileFunctions.h fileFunctions.cpp
 )
 
 target_compile_features(PAYVU_KR PRIVATE cxx_std_20)
