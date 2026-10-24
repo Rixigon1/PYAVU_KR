@@ -1,23 +1,18 @@
-#include "mainWin.h"
+#include <iostream>
+#include <windows.h>
 
-#include <QApplication>
-#include <QLocale>
-#include <QTranslator>
+#include "menuFunctions.h"
+#include "fileFunctions.h"
+#include "dataStructures.h"
 
-int main(int argc, char *argv[])
+using namespace std;
+
+int main()
 {
-    // QApplication a(argc, argv);
-
-    // QTranslator translator;
-    // const QStringList uiLanguages = QLocale::system().uiLanguages();
-    // for (const QString &locale : uiLanguages) {
-    //     const QString baseName = "PAYVU_KR_" + QLocale(locale).name();
-    //     if (translator.load(":/i18n/" + baseName)) {
-    //         a.installTranslator(&translator);
-    //         break;
-    //     }
-    // }
-    // mainWin w;
-    // w.show();
-    // return QApplication::exec();
+    // std::setlocale(LC_ALL, "Russian");
+    // std::setlocale(LC_ALL, ".UTF-8");
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+    TUI ui;
+    ui.exec();
 }

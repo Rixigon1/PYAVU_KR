@@ -7,10 +7,12 @@ using namespace std;
 enum state {GIVEN, INSTOCK};
 enum searchParam {ID, TITLE, AUTHOR, YEAROFRELEASE, CURSTATE};
 
+class bookTable;
+
 class book {
     private:
-        /* Р’РѕРїСЂРѕСЃ: ID РѕСЃС‚Р°РІРёС‚СЊ РЅР° РІС‹Р±РѕСЂ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РґР»СЏ РіРёР±РєРѕСЃС‚Рё РїСЂРѕРіСЂР°РјРјС‹ РІ СЂР°Р·РЅС‹С… РѕСЂРіР°РЅРёР·Р°С†РёСЏС…
-         *         РёР»Рё Р¶Рµ СЃРґРµР»Р°С‚СЊ РґР»СЏ РЅРµРіРѕ РѕРїСЂРµРґРµР»РµРЅРЅСѓСЋ РјР°СЃРєСѓ?
+        /* Вопрос: ID оставить на выбор пользователя для гибкости программы в разных организациях
+         *         или же сделать для него определенную маску?
         */
         string ID;
         string title;
@@ -23,57 +25,42 @@ class book {
         book(string ID = "", string title = "", string author = "", int yearOfRelease = 0000, state curState = INSTOCK);
         ~book();
 
-        template<typename T>
-        void setValue(T value, searchParam sParam) {
-            switch (sParam) {
-            case TITLE:
-                this->title = value;
-                break;
-            case AUTHOR:
-                this->author = value;
-                break;
-            case YEAROFRELEASE:
-                this->yearOfRelease = value;
-                break;
-            case CURSTATE:
-                this->curState = value;
-                break;
-            default:
-                break;
-            }
-        }
+        // template<typename T>
+        // void setValue(T value, searchParam sParam) {
+        //     switch (sParam) {
+        //     case TITLE:
+        //         this->title = value;
+        //         break;
+        //     case AUTHOR:
+        //         this->author = value;
+        //         break;
+        //     case YEAROFRELEASE:
+        //         this->yearOfRelease = value;
+        //         break;
+        //     case CURSTATE:
+        //         this->curState = value;
+        //         break;
+        //     default:
+        //         break;
+        //     }
+        // }
 
         void setTitle(string title);
         void setAuthor(string author);
         void setYearOfRelease(int yearOfRelease);
         void setState(state curState);
 
-        template<typename T>
-        T getValue(searchParam sParam) const {
-            switch (sParam) {
-            case searchParam::ID:
-                return ID;
-                break;
-            case TITLE:
-                return this->title;
-                break;
-            case AUTHOR:
-                return this->author;
-                break;
-            case YEAROFRELEASE:
-                return this->yearOfRelease;
-                break;
-            case CURSTATE:
-                return this->curState;
-                break;
-            }
-        }
+        string getID() const;
+        string getTitle() const;
+        string getAuthor() const;
+        int getYearOfRelease() const;
+        state getState() const;
 
-        // РњРµС‚РѕРґ СЃРѕР·РґР°РЅРёСЏ Рё РІРІРѕРґР° РґР°РЅРЅС‹С… РєРЅРёРіРё
-        int createBook();
+        int createBook(bookTable* bTable);
 
         bool operator==(const book& otherBook) const;
         friend ostream& operator<<(ostream& out, const book& book);
+        friend void errorProcessor(int eCode);
 };
 
 struct bookHasher {
@@ -82,7 +69,7 @@ struct bookHasher {
 
 class bookList {
     private:
-        // РЎРґРµР»Р°С‚СЊ РёРЅРёС†РёР°Р»РёР·Р°С†РёСЋ РІ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂРµ nullptr-Р°РјРё
+        // Сделать инициализацию в конструкторе nullptr-ами
         bookList* nextBookList;
         book* thisBook;
 
@@ -93,12 +80,14 @@ class bookList {
         bookList* getNextBookList();
         book* getBook();
 
-        // Р”РѕР±Р°РІР»РµРЅРёРµ РІ РєРѕРЅРµС† СЃРїРёСЃРєР° РєРѕСЂР·РёРЅС‹
-        void addBook(book* newBook);
+        void deleteAll();
 
-        // РЈРґР°Р»РµРЅРёРµ РёР· РїСЂРѕРёР·РІРѕР»СЊРЅРѕРіРѕ РјРµСЃС‚Р° РІ РєРѕСЂР·РёРЅРµ
-        // РџРѕРёСЃРє СЌР»РµРјРµРЅС‚Р° РёРґРµС‚ РІРЅСѓС‚СЂРё РјРµС‚РѕРґР°
-        // Р’РѕР·РІСЂР°С‰Р°РµС‚ -1 РµСЃР»Рё СЌР»РµРјРµРЅС‚ РЅРµ РЅР°Р№РґРµРЅ
+        // Добавление в конец списка корзины
+        int addBook(book* newBook);
+
+        // Удаление из произвольного места в корзине
+        // Поиск элемента идет внутри метода
+        // Возвращает -1 если элемент не найден
         // template<typename T>
         // int deleteBook(T value, searchParam sParam) {
         //     bookList* listHead = this;
@@ -112,12 +101,26 @@ class bookList {
 
         int deleteBook(string delBookID);
 
-        // Р’РѕР·РІСЂР°С‰Р°СЋС‚ СѓРєР°Р·Р°С‚РµР»СЊ РЅР° РєРЅРёРіСѓ, РїСЂРµРґС€РµРІСЃС‚РІСѓСЋС‰РµР№ РёСЃРєРѕРјРѕР№
+        // Возвращают указатель на книгу, предшевствующей искомой
         template<typename T>
         bookList* searchBook(T sValue, searchParam sParam) {
             bookList* sBookList = this;
+
             while(sBookList->nextBookList != nullptr) {
-                if(sBookList->nextBookList->thisBook->getValue<T>(sParam) == sValue) return sBookList;
+                switch (sParam) {
+                case ID:
+                    if(sBookList->nextBookList->thisBook->getID() == sValue) return sBookList;
+                    break;
+                case TITLE:
+                    if(sBookList->nextBookList->thisBook->getTitle() == sValue) return sBookList;
+                    break;
+                case AUTHOR:
+                    if(sBookList->nextBookList->thisBook->getAuthor() == sValue) return sBookList;
+                    break;
+                default:
+                    return nullptr;
+                    break;
+                }
                 sBookList = sBookList->nextBookList;
             }
             return nullptr;
@@ -134,21 +137,24 @@ class bookTable {
     private:
         bookList** table;
         int tableSize;
+        bool saved;
 
-        int hash(string bookID);
+        unsigned int hash(string bookID);
 
     public:
-        // РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РѕР±СЏР·Р°РЅ РІРІРµСЃС‚Рё СЂР°Р·РјРµСЂ С‚Р°Р±Р»РёС†С‹
+        // Пользователь обязан ввести размер таблицы
         bookTable(int tableSize);
         ~bookTable();
 
-        void addBook(book* newBook);
-        // Р’РѕР·РІСЂР°С‰Р°РµС‚ -1 РµСЃР»Рё СЌР»РµРјРµРЅС‚ РЅРµ РЅР°Р№РґРµРЅ
+        int getSize();
+
+        int addBook(book* newBook);
+        // Возвращает -1 если элемент не найден
 
 
         int deleteBook(string delBookID);
 
-        // Р’РѕР·РІСЂР°С‰Р°СЋС‚ СѓРєР°Р·Р°С‚РµР»СЊ РЅР° РєРЅРёРіСѓ, РїСЂРµРґС€РµРІСЃС‚РІСѓСЋС‰РµР№ РёСЃРєРѕРјРѕР№
+        // Возвращают указатель на книгу, предшевствующей искомой
         template<typename T>
         bookList* searchBook(T value, searchParam sParam) {
             switch (sParam) {
@@ -161,7 +167,8 @@ class bookTable {
             case TITLE:
                 for(int i = 0; i < tableSize; i++) {
                     bookList* bucket = table[i];
-                    if(bookList* sBookList = bucket->searchBook(value, sParam) != nullptr) {
+                    bookList* sBookList;
+                    if((sBookList = bucket->searchBook(value, sParam)) != nullptr) {
                         return sBookList;
                     }
                 }
@@ -170,15 +177,14 @@ class bookTable {
             case AUTHOR:
                 for(int i = 0; i < tableSize; i++) {
                     bookList* bucket = table[i];
-                    if(bookList* sBookList = bucket->searchBook(value, sParam) != nullptr) {
+                    bookList* sBookList;
+                    if((sBookList = bucket->searchBook(value, sParam)) != nullptr) {
                         return sBookList;
                     }
                 }
                 return nullptr;
                 break;
             default:
-                // РџРѕРґСѓРјР°С‚СЊ РЅР°Рґ РјРµС…Р°РЅРёР·РјРѕРј try-exception
-                // РќСѓР¶РµРЅ Р»Рё
                 break;
             }
         }
@@ -189,15 +195,20 @@ class bookTable {
         bookList* searchByAuthor(string bookAuthor);
         */
 
-        // Р§С‚РµРЅРёРµ Рё СЃРѕС…СЂР°РЅРµРЅРёРµ РёР·/РІ С„Р°Р№Р»Р°
-        void readFromFile(const string& fileName);
-        void writeToFile(const string& fileName);
+        bool isEmpty();
+        bool isSaved();
 
-        // Р’С‹РІРѕРґ РёРЅС„РѕСЂРјР°С†РёРё РїРѕ Р·Р°РїСЂРѕСЃСѓ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+        friend int checkID(string enteredID);
+
+        // Чтение и сохранение из/в файла
+        int readFromFile(const string& fileName);
+        int writeToFile(const string& fileName);
+
+        // Вывод информации по запросу пользователя
         void display();
         void display(state neededState);
 
-        // Р’С‹РІРѕРґ С‡РёСЃР»Р° РєРѕСЂР·РёРЅ Рё СЃР°РјРѕР№ РґР»РёРЅРЅРѕР№ РєРѕСЂР·РёРЅС‹
+        // Вывод числа корзин и самой длинной корзины
         void displayBucketCount();
         void displayLongestBucketLength();
 };

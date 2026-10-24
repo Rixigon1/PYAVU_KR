@@ -2,14 +2,19 @@
 
 #include <iostream>
 #include <fstream>
+#include <vector>
 #include <iomanip>
 #include <cmath>
+#include <utility>
+#include <sstream>
 #include <unordered_map>
+
+#include "utils.h"
 
 using namespace std;
 
 //--------------------------------------------------------------------------------------------------------------
-// РћРїСЂРµРґРµР»РµРЅРёРµ РєР»Р°СЃСЃР° РєРЅРёРіРё
+// Определение класса книги
 book::book(string ID, string title, string author, int yearOfRelease, state curState) {
     this->ID = ID;
     this->title = title;
@@ -35,29 +40,165 @@ void book::setState(state curState) {
 }
 
 
-// string book::getID() const {
-//     return this->ID;
-// }
+string book::getID() const  {
+    return this->ID;
+}
 
-// string book::getTitle() const {
-//     return this->title;
-// }
+string book::getTitle() const  {
+    return this->title;
+}
 
-// string book::getAuthor() const {
-//     return this->author;
-// }
+string book::getAuthor() const  {
+    return this->author;
+}
 
-// int book::getYearOfRelease() const {
-//     return this->yearOfRelease;
-// }
+int book::getYearOfRelease() const  {
+    return this->yearOfRelease;
+}
 
-// state book::getState() const {
-//     return this->curState;
-// }
+state book::getState() const  {
+    return this->curState;
+}
 
-int book::createBook() {
+// 0xFFFE
+int checkID(int enteredID) {
+
+}
+
+int book::createBook(bookTable* bTable) {
     int eCode = 0;
+    const int n = 5;
+    searchParam eParams[n] = {searchParam::ID, searchParam::TITLE, searchParam::AUTHOR, searchParam::YEAROFRELEASE, searchParam::CURSTATE};
+    bool exitEntering = false;
+    int i = 0;
+    while(!exitEntering) {
+        system("cls");
+        errorProcessor(eCode);
 
+        if(eCode == 0xFFFE) cout << "Ошибка: введено не число!" << endl << endl;
+        else if(eCode == 0xFFFF) cout << "Ошибка: введена пустая строка!" << endl << endl;
+        else if(eCode == 0xFFFC) cout << "Ошибка: введёное значение выходит за допустимые границы!" << endl << endl;
+
+        cout << "Создание экземпляра записи книги" << endl
+             << "Для выхода нажмите клавишу e на английской раскладке" << endl;
+        searchParam param = eParams[i];
+        switch (param) {
+        case searchParam::ID: {
+            string buf;
+            cout << "Введите инвертарный номер книги: ";
+            getline(cin, buf);
+            eCode = eraseSpaces(buf);
+            if(eCode != 0) continue;
+            if(buf == "e") {
+                exitEntering = true;
+                eCode = 0xAAA0; // Отмена создания записи об экземпляре книги
+                continue;
+            }
+            if(bTable->searchBook<string>(buf, searchParam::ID) != nullptr) {eCode = 0xFFF8; continue;}
+            ID = buf;
+            i++;
+            eCode = 0;
+            break;
+        }
+        case searchParam::TITLE: {
+            string buf;
+            cout << "Введите наименование книги: ";
+            getline(cin, buf);
+
+            eCode = eraseSpaces(buf);
+            if(eCode != 0) continue;
+            if(buf == "e") {
+                exitEntering = true;
+                eCode = 0xAAA0; // Отмена создания записи об экземпляре книги
+                continue;
+            }
+
+            title = buf;
+            i++;
+            eCode = 0;
+            break;
+        }
+        case searchParam::AUTHOR: {
+            string buf;
+            cout << "Введите имя автора: ";
+            getline(cin, buf);
+
+            eCode = eraseSpaces(buf);
+            if(eCode != 0) continue;
+            if(buf == "e") {
+                exitEntering = true;
+                eCode = 0xAAA0; // Отмена создания записи об экземпляре книги
+                continue;
+            }
+
+            author = buf;
+            i++;
+            eCode = 0;
+            break;
+        }
+        case searchParam::YEAROFRELEASE: {
+            string buffer;
+            int iBuffer;
+            size_t pos;
+            cout << "Введите год выпуска книги: ";
+            getline(cin, buffer);
+
+            eCode = eraseSpaces(buffer);
+            if(eCode != 0) continue;
+            if(buffer == "e") {
+                exitEntering = true;
+                eCode = 0xAAA0; // Отмена создания записи об экземпляре книги
+                continue;
+            }
+
+            pos = buffer.find_first_not_of("0123456789");
+            if(pos != string::npos) {eCode = 0xFFFE; continue;} // Введено не число
+
+            iBuffer = stoi(buffer);
+            if(iBuffer > 2026 || iBuffer < 1700) {eCode = 0xFFFC; continue;}
+
+            yearOfRelease = iBuffer;
+            i++;
+            eCode = 0;
+            break;
+        }
+        case searchParam::CURSTATE: {
+            string buffer;
+            int iBuffer;
+            size_t pos;
+            cout << "Введите текущий статус (Книга выдана - введите 1, книга на складе - введите 2): ";
+            getline(cin, buffer);
+
+            eCode = eraseSpaces(buffer);
+            if(eCode != 0) continue;
+            if(buffer == "e") {
+                exitEntering = true;
+                eCode = 0xAAA0; // Отмена создания записи об экземпляре книги
+                continue;
+            }
+
+            pos = buffer.find_first_not_of("0123456789");
+            if(pos != string::npos) {eCode = 0xFFFE; continue;} // Введено не число
+
+            iBuffer = stoi(buffer);
+            if(iBuffer != 1 && iBuffer != 2) {eCode = 0xFFFC; continue;} // Введенное значение вышло за допустимые границы значений
+
+            if(iBuffer == 1) {
+                curState = GIVEN;
+            }
+            else if(iBuffer == 2) {
+                curState = INSTOCK;
+            }
+
+            exitEntering = true;
+            eCode = 0;
+            break;
+        }
+        break;
+        default:
+            break;
+        }
+    }
     return eCode;
 }
 
@@ -69,11 +210,11 @@ bool book::operator==(const book& otherBook) const {
 }
 
 ostream& operator<<(ostream& out, const book& book) {
-    out << "РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РєРЅРёРіРё: " << setw(30) << ID << endl
-        << "РќР°РёРјРµРЅРѕРІР°РЅРёРµ РєРЅРёРіРё:  " << setw(30) << book.getValue<string>(TITLE) << endl
-        << "РРјСЏ Р°РІС‚РѕСЂР° РєРЅРёРіРё:    " << setw(30) << book.getValue<string>(AUTHOR) << endl
-        << "Р“РѕРґ РёР·РґР°РЅРёСЏ РєРЅРёРіРё:   " << setw(30) << book.getValue<int>(YEAROFRELEASE) << endl
-        << "РЎС‚Р°С‚СѓСЃ:              " << setw(30) << book.getValue<state>(CURSTATE) << endl;
+    out << "Идентификатор книги: " << setw(45) << book.ID << endl
+        << "Наименование книги:  " << setw(45) << book.title << endl
+        << "Имя автора книги:    " << setw(45) << book.author << endl
+        << "Год издания книги:   " << setw(45) << book.yearOfRelease << endl
+        << "Статус:              " << setw(45) << ((book.curState == GIVEN) ? "Выдана" : "На складе") << endl;
     return out;
 }
 
@@ -84,18 +225,29 @@ book::~book() {
 //--------------------------------------------------------------------------------------------------------------
 
 size_t bookHasher::operator()(const book& otherBook) const {
-    return hash<string>{}(otherBook.getValue<string>(TITLE) + "|" +
-                          otherBook.getValue<string>(AUTHOR) + "|" +
-                          to_string(otherBook.getValue<int>(YEAROFRELEASE)) + "|" +
-                          to_string(otherBook.getValue<state>(CURSTATE)));
+    return hash<string>{}(otherBook.getTitle() + "|" +
+                          otherBook.getAuthor() + "|" +
+                          to_string(otherBook.getYearOfRelease()) + "|" +
+                          to_string(otherBook.getState()));
 }
 
 //--------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------
-// РћРїСЂРµРґРµР»РµРЅРёРµ СЃРїРёСЃРєР° РєРЅРёРі
+// Определение списка книг
 bookList::bookList() {
     nextBookList = nullptr;
     thisBook = nullptr;
+}
+
+bookList::~bookList() {
+    delete thisBook;
+}
+
+void bookList::deleteAll() {
+    if(this->getNextBookList() != nullptr) {
+        this->getNextBookList()->deleteAll();
+        delete this->getNextBookList();
+    }
 }
 
 bookList* bookList::getNextBookList() {
@@ -106,33 +258,35 @@ book* bookList::getBook() {
     return thisBook;
 }
 
-void bookList::addBook(book* newBook) {
+int bookList::addBook(book* newBook) {
+    string sID = newBook->getID();
+    if(this->searchBook<string>(sID, ID)) return 0xFFF8;
+
     bookList* sBookList = this;
     while(sBookList->nextBookList != nullptr) {
         sBookList = sBookList->nextBookList;
     }
     sBookList->nextBookList = new bookList;
     sBookList->nextBookList->thisBook = newBook;
-    delete sBookList;
+    return 0;
 }
 
 int bookList::deleteBook(string delBookID) {
-    bookList* listHead = this;
+    // bookList* listHead = this;
     bookList* sBookList = searchBook<string>(delBookID, ID);
-    int code = (sBookList == nullptr) ? -1 : 0;
+    if(sBookList == nullptr) return 0xFFFA;
+    // int code = (sBookList == nullptr) ? 0xFFFA : 0;
     bookList* delBookList = sBookList->nextBookList;
     sBookList->nextBookList = sBookList->nextBookList->nextBookList;
-    return code;
+    delete delBookList;
+    return 0;
 }
 
-bookList::~bookList() {
-    delete thisBook;
-    delete nextBookList;
-}
+
 
 //--------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------
-// РћРїСЂРµРґРµР»РµРЅРёРµ С‚Р°Р±Р»РёС†С‹ РєРЅРёРі
+// Определение таблицы книг
 bookTable::bookTable(int tableSize) {
     this->tableSize = tableSize;
     table = new bookList*[this->tableSize];
@@ -141,20 +295,38 @@ bookTable::bookTable(int tableSize) {
     }
 }
 
-// РџРµСЂРµСЂР°Р±РѕС‚Р°С‚СЊ Р±РѕР»РµРµ РѕРїС‚РёРјР°Р»СЊРЅСѓСЋ
-int bookTable::hash(string bookID) {
-    int res = 0;
+bookTable::~bookTable() {
+    for(int i = 0; i < tableSize; i++) {
+        table[i]->deleteAll();
+        delete table[i];
+    }
+    delete[] table;
+}
+
+// Переработать в более оптимальную
+// Подумать над переполнением
+unsigned int bookTable::hash(string bookID) {
+    unsigned res = 0;
     for(char c : bookID) {
-        res = res * c + 15;
+        res = (res+1) * c + 15;
     }
     return res;
 }
 
-void bookTable::addBook(book* newBook) {
-    table[hash(newBook->getValue<string>(ID)) % tableSize]->addBook(newBook);
+int bookTable::getSize() {
+    return tableSize;
+}
+
+int bookTable::addBook(book* newBook) {
+    bookList* sBookList;
+    sBookList = searchBook(newBook->getID(), ID);
+    if(sBookList != nullptr) return 0xFFF8;
+    saved = false;
+    return table[hash(newBook->getID()) % tableSize]->addBook(newBook);
 }
 
 int bookTable::deleteBook(string delBookID) {
+    saved = false;
     return table[hash(delBookID) % tableSize]->deleteBook(delBookID);
 }
 
@@ -164,153 +336,197 @@ bookList* searchByTitle(string bookTitle);
 bookList* searchByAuthor(string bookAuthor);
 */
 
-// Р§С‚РµРЅРёРµ Рё СЃРѕС…СЂР°РЅРµРЅРёРµ РёР·/РІ С„Р°Р№Р»Р°
-void bookTable::readFromFile(const string& fileName) {
-
-
+bool bookTable::isEmpty() {
+    for(int i = 0; i < tableSize; i++) {
+        bookList* iter = table[i]->getNextBookList();
+        if(iter != nullptr) return false;
+    }
+    return true;
 }
-void bookTable::writeToFile(const string& fileName) {
 
+bool bookTable::isSaved() {
+    return saved;
 }
 
-// // Р¤СѓРЅРєС†РёСЏ РѕРєСЂСѓРіР»РµРЅРёСЏ РєРѕРѕСЂРґРёРЅР°С‚С‹ С†РµР»Рё
-// string to_string_fixed_precision(double value, int n = 3) {
-//     stringstream ss;
-//     ss << fixed << setprecision(n) << value;
-//     return ss.str();
-// }
+// Чтение и сохранение из/в файла
+int bookTable::readFromFile(const string& fileName) {
+    int eCode = 0;
+    string ssBuffer = "";
+    fstream fid;
+    stringstream ss;
+    book* newBook;
+    // if(eCode != 0) return eCode;
 
-// РЁР°Р±Р»РѕРЅС‹ РґР»СЏ С„СѓРЅРєС†РёРё Р·Р°РїРёСЃРё Рё С‡С‚РµРЅРёСЏ С‚Р°Р»РёС†С‹ РёР· С„Р°Р№Р»Р°
+    // cout << "Чтение списка целей" << endl << endl;
 
-// // Р¤СѓРЅРєС†РёСЏ С‡С‚РµРЅРёСЏ СЃРїРёСЃРєР° С†РµР»РµР№
-// int readTargetList(string& fileName) {
-//     int eCode = 0;
-//     string buffer = "";
-//     fstream fid;
-//     stringstream ss;
-//     book* newBook = new book;
-//     newBook->createBook();
-//     if(eCode != 0) return eCode;
-
-//     // cout << "Р§С‚РµРЅРёРµ СЃРїРёСЃРєР° С†РµР»РµР№" << endl << endl;
-
-//     // eCode = chooseFile(fileName, false);
+    // eCode = chooseFile(fileName, false);
 
 
-//     fid.open(fileName, ios::in);
-//     while(getline(fid, buffer)) {
-//         buffer += ' ';
-//         int firstPosOfSpace = 0;
-//         string targetNameBuf = "";
-//         string coordDataBuf = "";
-//         double coordData = 0;
-//         ss.str("");
-//         ss.clear();
-//         // Р§С‚РµРЅРёРµ СЃС‚СЂРѕРєРё С†РµР»Рё Рё РµС‘ РєРѕРѕСЂРґРёРЅР°С‚
-//         firstPosOfSpace = buffer.find_first_not_of(' ');
-//         if(firstPosOfSpace == buffer.npos) continue;
-//         buffer = buffer.substr(firstPosOfSpace);
-//         ss << buffer;
-//         // Р”РѕР±Р°РІР»РµРЅРёРµ С†РµР»Рё Рё РµС‘ РєРѕРѕСЂРґРёРЅР°С‚ РІ СЃРїРёСЃРѕРє
-//         getline(ss, targetNameBuf, ' ');
-//         curTarget = addTargetEnd(targetHead, targetNameBuf);
-//         while(getline(ss, coordDataBuf, '|')) {
-//             if(coordDataBuf != "" &&  coordDataBuf != "\n") {
-//                 coordData = stod(coordDataBuf);
-//                 addCoordEnd(curTarget, coordData);
-//             }
-//         }
-//     }
-//     fid.close();
-//     return eCode;
-// }
-// // Р¤СѓРЅРєС†РёСЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ СЃРїРёСЃРєР° РІ С„Р°Р№Р»
-// int saveListToFile(string &fileName, target* targetHead) {
-//     int eCode = 0;
-//     fstream fid;
-//     target* bufTar = targetHead->targetPtr;
-//     coordinate* bufCoord = nullptr;
+    fid.open(fileName, ios::in);
 
-//     cout << "РЎРѕС…СЂР°РЅРµРЅРёРµ СЃРїРёСЃРєР° С†РµР»РµР№" << endl << endl;
+    if(!fid.is_open()) return 0xFFF4;
 
-//     eCode = chooseFile(fileName, true);
-//     if(eCode != 0) return eCode;
+    while(getline(fid, ssBuffer)) {
+        ssBuffer += '$';
+        int i = 0;
+        size_t pos = 0;
+        string buffer = "";
+        string coordDataBuf = "";
+        double coordData = 0;
+        ss.str("");
+        ss.clear();
+        // Чтение строки цели и её координат
+        pos = ssBuffer.find_first_not_of(' ');
+        if(pos == string::npos) continue;
+        ssBuffer = ssBuffer.substr(pos);
+        pos = ssBuffer.find_first_of("\n");
+        if(pos != string::npos) ssBuffer.erase(pos, 1);
+        ss << ssBuffer;
+        // Добавление цели и её координат в список
+        while(getline(ss, buffer, '$')) {
+            if(buffer != "" &&  buffer != "\n") {
+                switch (i) {
+                case 0:
+                    // eCode = eraseSpaces(buffer);
+                    newBook = new book(buffer);
+                    break;
+                case 1:
+                    // eCode = eraseSpaces(buffer);
+                    newBook->setTitle(buffer);
+                    break;
+                case 2:
+                    // eCode = eraseSpaces(buffer);
+                    newBook->setAuthor(buffer);
+                    break;
+                case 3:
+                    // eCode = eraseSpaces(buffer);
+                    if(eCode != 0) {
+                        newBook->setYearOfRelease(0000);
+                    }
+                    else {
+                        newBook->setYearOfRelease(stoi(buffer));
+                    }
+                    break;
+                case 4:
+                    // eCode = eraseSpaces(buffer);
+                    if(buffer == "GIVEN") newBook->setState(GIVEN);
+                    if(buffer == "INSTOCK") newBook->setState(INSTOCK);
+                    break;
+                default:
+                    break;
+                }
+            }
+            i++;
+        }
+        eCode = table[hash(newBook->getID()) % tableSize]->addBook(newBook);
+        // if(eCode != 0) delete newBook;
+    }
+    saved = true;
+    fid.close();
+    return 0;
+}
+int bookTable::writeToFile(const string& fileName) {
+    fstream fid;
+    stringstream ss;
 
-//     fid.open(fileName, ios::out);
+    fid.open(fileName, ios::out);
+    if(!fid.is_open()) return 0xFFF4;
 
-//     // РџРµСЂРµР±РѕСЂ Рё Р·Р°РїРёСЃСЊ С†РµР»РµР№
-//     while(bufTar != nullptr) {
-//         fid << bufTar->data << ' ';
-//         bufCoord = bufTar->coordPtr;
-//         // РџРµСЂРµР±РѕСЂ Рё Р·Р°РїРёСЃСЊ РєРѕРѕСЂРґРёРЅР°С‚ С†РµР»Рё
-//         while(bufCoord != nullptr) {
-//             fid << bufCoord->coordData << ' ';
-//             bufCoord = bufCoord->coordPtr;
-//         }
-//         fid << endl;
-//         bufTar = bufTar->targetPtr;
-//     }
-//     return eCode;
-// }
+    for(int i = 0; i < tableSize; i++) {
+        bookList* iter = table[i]->getNextBookList();
+        while(iter != nullptr) {
+            book* curBook = iter->getBook();
+            ss << curBook->getID() << "$"
+               << curBook->getTitle() << "$"
+               << curBook->getAuthor() << "$"
+               << curBook->getYearOfRelease() << "$";
+
+            if((curBook->getState()) == GIVEN) ss << "GIVEN" << "\n";
+            if((curBook->getState()) == INSTOCK) ss << "INSTOCK" << "\n";
+            fid << ss.str();
+            ss.str("");
+            ss.clear();
+            iter = iter->getNextBookList();
+        }
+    }
+    saved = true;
+    return 0;
+}
 
 
 
-// Р’С‹РІРѕРґ РёРЅС„РѕСЂРјР°С†РёРё РїРѕ Р·Р°РїСЂРѕСЃСѓ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
-// Р¤РѕСЂРјР°С‚ С‚РµРєСЃС‚Р° UTF-8
+
+
+// Вывод информации по запросу пользователя
+// Печатается только один ID для всей группы
 void bookTable::display() {
-    unordered_map<book, int, bookHasher> displayMap;
+    unordered_map<book, pair<int, vector<string>>, bookHasher> displayMap;
 
     for(int i = 0; i < tableSize; i++) {
         bookList* iter = table[i]->getNextBookList();
         while(iter != nullptr) {
             book* curBook = iter->getBook();
             if(!displayMap.contains(*curBook)) {
-                displayMap.insert({*(curBook), 1});
+                displayMap.insert({*(curBook), make_pair(1, vector<string>{curBook->getID()})});
             }
             else {
-                displayMap[*curBook]++;
+                displayMap[*curBook].first++;
+                displayMap[*curBook].second.push_back(curBook->getID());
             }
             iter = iter->getNextBookList();
         }
     }
 
+    string sep(30, '-');
     for(const auto& p : displayMap) {
         cout << p.first << endl
-             << "РљРѕР»РёС‡РµСЃС‚РІРѕ: " << setw(30) << p.second << endl << endl;
+             << "Количество: " << setw(39) << p.second.first << endl
+             << "Инвентарные номера книг: " << endl;
+        for(auto str : p.second.second) {
+            cout << setw(51) << str << endl;
+        }
+        cout << endl << sep << endl;
     }
 }
 void bookTable::display(state neededState) {
-    unordered_map<book, int, bookHasher> displayMap;
+    unordered_map<book, pair<int, vector<string>>, bookHasher> displayMap;
 
     for(int i = 0; i < tableSize; i++) {
         bookList* iter = table[i]->getNextBookList();
         while(iter != nullptr) {
             book* curBook = iter->getBook();
-            if(curBook->getValue<state>(CURSTATE) == neededState) {
+            if(curBook->getState() == neededState) {
                 if(!displayMap.contains(*curBook)) {
-                    displayMap.insert({*(curBook), 1});
+                    displayMap.insert({*(curBook), make_pair(1, vector<string>{curBook->getID()})});
                 }
                 else {
-                    displayMap[*curBook]++;
+                    displayMap[*curBook].first++;
+                    displayMap[*curBook].second.push_back(curBook->getID());
                 }
-                iter = iter->getNextBookList();
             }
+            iter = iter->getNextBookList();
         }
     }
 
+    string sep(30, '-');
     for(const auto& p : displayMap) {
         cout << p.first << endl
-             << "РљРѕР»РёС‡РµСЃС‚РІРѕ: " << setw(30) << p.second << endl << endl;
+             << "Количество: " << setw(30) << p.second.first << endl
+             << "Инвентарные номера книг: " << endl;
+        for(auto str : p.second.second) {
+            cout << "\t" << str << endl;
+        }
+        cout << endl << sep << endl;
     }
 }
 
-// Р’С‹РІРѕРґ С‡РёСЃР»Р° РєРѕСЂР·РёРЅ Рё СЃР°РјРѕР№ РґР»РёРЅРЅРѕР№ РєРѕСЂР·РёРЅС‹
+// Вывод числа корзин и самой длинной корзины
 void bookTable::displayBucketCount() {
     int count = 0;
     for(int i = 0; i < tableSize; i++) {
         if(table[i]->getNextBookList() != nullptr) count++;
     }
-    cout << "РљРѕР»РёС‡РµСЃС‚РІРѕ Р·Р°РЅСЏС‚С‹С… СЏС‡РµРµРє: " << count << endl;
+    cout << "Количество занятых ячеек: " << count << endl;
 }
 void bookTable::displayLongestBucketLength() {
     int maxLen = 0;
@@ -323,16 +539,11 @@ void bookTable::displayLongestBucketLength() {
         }
         maxLen = max(maxLen, count);
     }
-    cout << "РњР°РєСЃРёРјР°Р»СЊРЅР°СЏ РґР»РёРЅР° СЏС‡РµР№РєРё:" << maxLen << endl;
+    cout << "Максимальная длина ячейки: " << maxLen << endl;
 }
 
 
-bookTable::~bookTable() {
-    for(int i = 0; i < tableSize; i++) {
-        delete table[i];
-    }
-    delete table;
-}
+
 
 //--------------------------------------------------------------------------------------------------------------
 
