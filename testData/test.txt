@@ -1,0 +1,11 @@
+1$Essential Grammar in Use$Murphy$2015$GIVEN
+5$English Grammar in Use$Murphy$2019$GIVEN
+2$Spring в действии$Уоллс$2022$GIVEN
+6$Java. Библиотека профессионала. Том 2.$Хорстман$2020$INSTOCK
+3$Spring Security в действии$Спилкэ$2025$INSTOCK
+7$Java. Библиотека профессионала. Том 1.$Хорстман$2020$GIVEN
+BOOK_RU_CLASSIC_1$Капитанская дочка$Пушкин$1750$INSTOCK
+BOOK_US_SCIENCE_1$Qt 5.10. Проффесиональное программирование на C++$Шлее$2024$GIVEN
+BOOK_US_SCIENCE_2$Алгоритмы. Руководство по разработке.$Скиена$2025$INSTOCK
+4$PostgreSQL: SQL+PL/pgSQL$Ткачев$2024$GIVEN
+8$Essential Grammar in Use$Murphy$2015$GIVEN
